@@ -1,0 +1,626 @@
+
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>นาฬิกาจับเวลาบั้งไฟ (หน่วยวินาทีบริสุทธิ์) - Bang Fai Precision Stopwatch</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Kanit & JetBrains Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@700;800&family=Kanit:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body {
+            font-family: 'Kanit', sans-serif;
+            background-color: #07090e;
+            color: #f3f4f6;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        .font-mono-num {
+            font-family: 'JetBrains Mono', monospace;
+            font-variant-numeric: tabular-nums;
+        }
+        /* Custom Neon Glow Effects */
+        .glow-yellow {
+            text-shadow: 0 0 20px rgba(255, 230, 0, 0.6), 0 0 40px rgba(255, 230, 0, 0.3);
+        }
+        .glow-green {
+            box-shadow: 0 0 30px rgba(0, 255, 136, 0.4);
+        }
+        .glow-red {
+            box-shadow: 0 0 30px rgba(255, 46, 77, 0.4);
+        }
+        /* Pulse Animation for active flight */
+        @keyframes pulse-border {
+            0%, 100% { border-color: rgba(0, 255, 136, 0.8); box-shadow: 0 0 25px rgba(0, 255, 136, 0.5); }
+            50% { border-color: rgba(0, 255, 136, 0.3); box-shadow: 0 0 10px rgba(0, 255, 136, 0.2); }
+        }
+        .timer-running {
+            animation: pulse-border 1.5s infinite ease-in-out;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between p-3 sm:p-6 bg-slate-950 text-slate-100">
+
+    <!-- Header Section -->
+    <header class="w-full max-w-5xl mx-auto flex items-center justify-between pb-4 border-b border-slate-800">
+        <div class="flex items-center space-x-3">
+            <div class="p-2.5 bg-gradient-to-br from-amber-500 to-red-600 rounded-xl text-black shadow-lg">
+                <i data-lucide="flame" class="w-7 h-7 stroke-[2.5]"></i>
+            </div>
+            <div>
+                <h1 class="text-xl sm:text-2xl font-black tracking-wide text-amber-400">จับเวลาบั้งไฟ <span class="text-xs font-semibold px-2 py-0.5 bg-red-500/20 text-red-400 border border-red-500/40 rounded-full ml-1">หน่วยวินาทีบริสุทธิ์</span></h1>
+                <p class="text-xs sm:text-sm text-slate-400">ระบบจับเวลากลางแจ้งความแม่นยำสูง (ห้ามแปลงหน่วยนาที)</p>
+            </div>
+        </div>
+        <div class="flex items-center space-x-2">
+            <button id="soundToggleBtn" onclick="toggleSound()" class="p-2.5 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 transition flex items-center space-x-1 border border-slate-700 text-xs font-semibold" title="เปิด/ปิด เสียงสัญญาณ">
+                <i id="soundIcon" data-lucide="volume-2" class="w-4 h-4 text-emerald-400"></i>
+                <span id="soundLabel" class="hidden sm:inline">เสียงเปิด</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Stopwatch Container -->
+    <main class="w-full max-w-5xl mx-auto my-auto py-4 space-y-6">
+
+        <!-- Banner Rule Notice -->
+        <div class="bg-amber-500/10 border border-amber-500/30 rounded-xl p-2.5 text-center text-amber-300 text-xs sm:text-sm font-medium flex items-center justify-center gap-2">
+            <i data-lucide="alert-triangle" class="w-4 h-4 shrink-0 text-amber-400"></i>
+            <span>กฎกติกา: แสดงเวลาเป็น <b>"วินาทีล้วน"</b> เช่น 185.50 วินาที (ไม่ใช้หน่วยนาที เพื่อความโปร่งใส ป้องกันการโกง)</span>
+        </div>
+
+        <!-- Big Timer Card -->
+        <div id="timerCard" onclick="handleDisplayClick(event)" class="relative cursor-pointer bg-slate-900/90 border-2 border-slate-800 rounded-3xl p-6 sm:p-10 text-center shadow-2xl transition-all duration-200 hover:border-slate-700 select-none">
+            
+            <!-- Status Badge -->
+            <div class="absolute top-4 left-4 sm:top-6 sm:left-6 flex items-center space-x-2">
+                <span id="statusDot" class="w-3.5 h-3.5 rounded-full bg-slate-500"></span>
+                <span id="statusText" class="text-xs sm:text-sm font-bold tracking-wider text-slate-400 uppercase">พร้อมจับเวลา</span>
+            </div>
+
+            <!-- Display Label -->
+            <div class="text-xs sm:text-sm font-bold text-amber-400 uppercase tracking-widest mt-4 sm:mt-2">
+                หน่วยเวลา: วินาที (Seconds Only)
+            </div>
+
+            <!-- Massive Timer Number -->
+            <div class="my-4 sm:my-8">
+                <div class="font-mono-num font-black text-6xl sm:text-8xl md:text-9xl tracking-tight text-amber-300 glow-yellow leading-none">
+                    <span id="secondsDisplay">0</span><span class="text-4xl sm:text-6xl md:text-7xl text-amber-400/80">.</span><span id="decimalsDisplay" class="text-4xl sm:text-6xl md:text-7xl text-amber-400/80">00</span>
+                </div>
+                <div class="text-sm sm:text-base font-semibold text-slate-400 mt-2">
+                    วินาที (SEC)
+                </div>
+            </div>
+
+            <!-- Quick Tap Instruction -->
+            <div class="text-xs text-slate-500 sm:text-slate-400 mt-2 font-light">
+                <span class="hidden sm:inline">กด <kbd class="px-2 py-0.5 bg-slate-800 border border-slate-700 rounded text-amber-300 font-mono">Spacebar</kbd> หรือ</span> แตะที่กล่องนี้เพื่อ เริ่ม / หยุด เวลาทันที
+            </div>
+        </div>
+
+        <!-- Controls Buttons -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+            <!-- START / STOP Toggle Button -->
+            <button id="mainStartBtn" onclick="toggleTimer()" class="sm:col-span-1 py-5 px-6 rounded-2xl bg-emerald-500 hover:bg-emerald-400 active:scale-95 text-slate-950 font-black text-2xl sm:text-3xl shadow-lg glow-green transition flex items-center justify-center space-x-3 cursor-pointer">
+                <i id="mainStartIcon" data-lucide="play" class="w-8 h-8 fill-current"></i>
+                <span id="mainStartText">เริ่มจับเวลา</span>
+            </button>
+
+            <!-- RECORD Flight Button -->
+            <button id="recordBtn" onclick="recordFlight()" class="py-4 px-6 rounded-2xl bg-amber-500 hover:bg-amber-400 active:scale-95 text-slate-950 font-bold text-lg sm:text-xl shadow-md transition flex items-center justify-center space-x-2 border border-amber-300 cursor-pointer">
+                <i data-lucide="bookmark-plus" class="w-6 h-6"></i>
+                <span>บันทึกเวลา (Enter)</span>
+            </button>
+
+            <!-- RESET Button -->
+            <button id="resetBtn" onclick="resetTimer()" class="py-4 px-6 rounded-2xl bg-slate-800 hover:bg-slate-700 active:scale-95 text-slate-200 font-bold text-lg sm:text-xl border border-slate-700 transition flex items-center justify-center space-x-2 cursor-pointer">
+                <i data-lucide="rotate-ccw" class="w-6 h-6 text-slate-400"></i>
+                <span>รีเซ็ต (R)</span>
+            </button>
+        </div>
+
+        <!-- Rocket Input Form -->
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-lg">
+            <label for="rocketNameInput" class="block text-xs font-bold text-amber-400 uppercase tracking-wider mb-2">
+                ชื่อบั้งไฟ / ค่ายบั้งไฟ / ทีมงาน (ใส่ก่อนหรือหลังจับเวลาได้):
+            </label>
+            <div class="flex flex-col sm:flex-row gap-2">
+                <div class="relative flex-1">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500">
+                        <i data-lucide="rocket" class="w-5 h-5"></i>
+                    </div>
+                    <input type="text" id="rocketNameInput" placeholder="ตัวอย่าง: ค่ายเพชรนาแก - บั้งไฟแสน #1" class="w-full pl-10 pr-4 py-3 bg-slate-950 border border-slate-700 rounded-xl text-slate-100 placeholder-slate-500 focus:outline-none focus:border-amber-400 font-medium text-base">
+                </div>
+                <!-- Preset Tags -->
+                <div class="flex items-center gap-1.5 overflow-x-auto py-1 sm:py-0">
+                    <button type="button" onclick="setPreset('บั้งไฟหมื่น')" class="px-2.5 py-1.5 text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg whitespace-nowrap border border-slate-700">+ บั้งไฟหมื่น</button>
+                    <button type="button" onclick="setPreset('บั้งไฟแสน')" class="px-2.5 py-1.5 text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg whitespace-nowrap border border-slate-700">+ บั้งไฟแสน</button>
+                    <button type="button" onclick="setPreset('บั้งไฟล้าน')" class="px-2.5 py-1.5 text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg whitespace-nowrap border border-slate-700">+ บั้งไฟล้าน</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- History & Leaderboard Section -->
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-6 shadow-lg space-y-4">
+            
+            <!-- History Header & Tools -->
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-3">
+                <div class="flex items-center space-x-2">
+                    <i data-lucide="trophy" class="w-6 h-6 text-amber-400"></i>
+                    <h2 class="text-lg font-bold text-slate-100">ตารางบันทึกผลการบิน (<span id="recordCount">0</span> รายการ)</h2>
+                </div>
+                
+                <div class="flex flex-wrap items-center gap-2">
+                    <button onclick="copySummaryText()" class="px-3 py-1.5 text-xs font-semibold bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 border border-emerald-500/40 rounded-lg flex items-center space-x-1 transition">
+                        <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+                        <span>คัดลอกสรุปผล</span>
+                    </button>
+                    <button onclick="exportCSV()" class="px-3 py-1.5 text-xs font-semibold bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 border border-blue-500/40 rounded-lg flex items-center space-x-1 transition">
+                        <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                        <span>โหลด CSV</span>
+                    </button>
+                    <button onclick="clearAllLogs()" class="px-3 py-1.5 text-xs font-semibold bg-red-600/20 hover:bg-red-600/30 text-red-400 border border-red-500/40 rounded-lg flex items-center space-x-1 transition">
+                        <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                        <span>ล้างทั้งหมด</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Top Record Highlight Box -->
+            <div id="topRecordCard" class="hidden bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent border border-amber-500/30 p-3.5 rounded-xl flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <div class="p-2 bg-amber-500/20 rounded-lg text-amber-400">
+                        <i data-lucide="award" class="w-6 h-6"></i>
+                    </div>
+                    <div>
+                        <div class="text-xs text-amber-400 font-bold uppercase tracking-wider">สถิติสูงสุดสถิติท้องฟ้าวันนี้</div>
+                        <div id="topTeamName" class="text-sm font-bold text-slate-200">-</div>
+                    </div>
+                </div>
+                <div class="text-right">
+                    <span id="topTime" class="font-mono-num text-xl sm:text-2xl font-black text-amber-300">0.00</span>
+                    <span class="text-xs text-amber-400 font-semibold ml-1">วินาที</span>
+                </div>
+            </div>
+
+            <!-- Table Container -->
+            <div class="overflow-x-auto rounded-xl border border-slate-800">
+                <table class="w-full text-left text-sm text-slate-300">
+                    <thead class="bg-slate-950 text-slate-400 uppercase text-xs font-semibold border-b border-slate-800">
+                        <tr>
+                            <th class="px-4 py-3 text-center w-12">ลำดับ</th>
+                            <th class="px-4 py-3">ชื่อบั้งไฟ / ค่าย</th>
+                            <th class="px-4 py-3 text-right">เวลาบินสถิติ (วินาที)</th>
+                            <th class="px-4 py-3 text-center">เวลาบันทึก</th>
+                            <th class="px-4 py-3 text-center w-16">จัดการ</th>
+                        </tr>
+                    </thead>
+                    <tbody id="logsTableBody" class="divide-y divide-slate-800/60 bg-slate-900/50">
+                        <tr id="emptyRow">
+                            <td colspan="5" class="px-4 py-8 text-center text-slate-500 font-medium">
+                                <i data-lucide="clock" class="w-8 h-8 mx-auto mb-2 opacity-40"></i>
+                                ยังไม่มีการบันทึกเวลา กด "บันทึกเวลา" เพื่อเก็บสถิติ
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- Notification Toast Modal -->
+    <div id="toast" class="fixed bottom-6 right-6 transform translate-y-20 opacity-0 transition-all duration-300 bg-emerald-500 text-slate-950 px-5 py-3 rounded-xl font-bold shadow-2xl flex items-center space-x-2 z-50">
+        <i data-lucide="check-circle-2" class="w-5 h-5"></i>
+        <span id="toastMessage">คัดลอกข้อมูลสำเร็จ</span>
+    </div>
+
+    <!-- Footer -->
+    <footer class="w-full max-w-5xl mx-auto pt-6 text-center text-xs text-slate-600 border-t border-slate-800/80">
+        ระบบจับเวลาบั้งไฟมาตรฐานสนามแข่งขัน &copy; หน่วยวินาทีแม่นยำสูง (Strictly Seconds Stopwatch)
+    </footer>
+
+    <script>
+        // Stopwatch Core State Variables
+        let startTime = 0;
+        let elapsedTime = 0;
+        let timerInterval = null;
+        let isRunning = false;
+        let soundEnabled = true;
+        let flightLogs = [];
+
+        // Audio Context setup for responsive local beeps
+        let audioCtx = null;
+
+        function initAudio() {
+            if (!audioCtx) {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                if (AudioContext) audioCtx = new AudioContext();
+            }
+            if (audioCtx && audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+
+        function playBeep(freq = 800, type = 'sine', duration = 0.1) {
+            if (!soundEnabled) return;
+            try {
+                initAudio();
+                if (!audioCtx) return;
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = type;
+                osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+                gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start();
+                osc.stop(audioCtx.currentTime + duration);
+            } catch (e) {
+                console.log("Audio not supported or blocked");
+            }
+        }
+
+        function vibrate(pattern = [50]) {
+            if (navigator.vibrate) {
+                navigator.vibrate(pattern);
+            }
+        }
+
+        function updateDisplay() {
+            if (isRunning) {
+                elapsedTime = performance.now() - startTime;
+                timerInterval = requestAnimationFrame(updateDisplay);
+            }
+            
+            // Convert pure milliseconds to total seconds float
+            const totalSecondsFloat = elapsedTime / 1000;
+            const formattedString = totalSecondsFloat.toFixed(2);
+            const [secPart, decPart] = formattedString.split('.');
+
+            document.getElementById('secondsDisplay').innerText = secPart;
+            document.getElementById('decimalsDisplay').innerText = decPart;
+        }
+
+        function toggleTimer() {
+            initAudio();
+            if (isRunning) {
+                stopTimer();
+            } else {
+                startTimer();
+            }
+        }
+
+        function startTimer() {
+            if (isRunning) return;
+            isRunning = true;
+            startTime = performance.now() - elapsedTime;
+            timerInterval = requestAnimationFrame(updateDisplay);
+
+            // UI Adjustments for Running State
+            document.getElementById('timerCard').classList.add('timer-running');
+            document.getElementById('statusDot').className = 'w-3.5 h-3.5 rounded-full bg-emerald-400 animate-ping';
+            document.getElementById('statusText').innerText = 'กำลังจับเวลาอยู่...';
+            document.getElementById('statusText').className = 'text-xs sm:text-sm font-bold tracking-wider text-emerald-400 uppercase';
+
+            const startBtn = document.getElementById('mainStartBtn');
+            startBtn.className = 'sm:col-span-1 py-5 px-6 rounded-2xl bg-red-600 hover:bg-red-500 active:scale-95 text-white font-black text-2xl sm:text-3xl shadow-lg glow-red transition flex items-center justify-center space-x-3 cursor-pointer';
+            document.getElementById('mainStartText').innerText = 'หยุดเวลา';
+            
+            const icon = document.getElementById('mainStartIcon');
+            icon.setAttribute('data-lucide', 'square');
+            lucide.createIcons();
+
+            playBeep(1000, 'sine', 0.12);
+            vibrate([70]);
+        }
+
+        function stopTimer() {
+            if (!isRunning) return;
+            isRunning = false;
+            cancelAnimationFrame(timerInterval);
+
+            // UI Adjustments for Stopped State
+            document.getElementById('timerCard').classList.remove('timer-running');
+            document.getElementById('statusDot').className = 'w-3.5 h-3.5 rounded-full bg-red-500';
+            document.getElementById('statusText').innerText = 'หยุดเวลาแล้ว';
+            document.getElementById('statusText').className = 'text-xs sm:text-sm font-bold tracking-wider text-red-400 uppercase';
+
+            const startBtn = document.getElementById('mainStartBtn');
+            startBtn.className = 'sm:col-span-1 py-5 px-6 rounded-2xl bg-emerald-500 hover:bg-emerald-400 active:scale-95 text-slate-950 font-black text-2xl sm:text-3xl shadow-lg glow-green transition flex items-center justify-center space-x-3 cursor-pointer';
+            document.getElementById('mainStartText').innerText = 'เริ่มจับเวลาต่อ';
+            
+            const icon = document.getElementById('mainStartIcon');
+            icon.setAttribute('data-lucide', 'play');
+            lucide.createIcons();
+
+            playBeep(450, 'square', 0.2);
+            vibrate([40, 40]);
+        }
+
+        function resetTimer() {
+            if (isRunning) stopTimer();
+            elapsedTime = 0;
+            
+            document.getElementById('secondsDisplay').innerText = '0';
+            document.getElementById('decimalsDisplay').innerText = '00';
+
+            document.getElementById('statusDot').className = 'w-3.5 h-3.5 rounded-full bg-slate-500';
+            document.getElementById('statusText').innerText = 'พร้อมจับเวลา';
+            document.getElementById('statusText').className = 'text-xs sm:text-sm font-bold tracking-wider text-slate-400 uppercase';
+
+            document.getElementById('mainStartText').innerText = 'เริ่มจับเวลา';
+
+            playBeep(600, 'triangle', 0.1);
+            vibrate([30]);
+        }
+
+        function handleDisplayClick(event) {
+            // Prevent click if clicking direct input buttons inside
+            toggleTimer();
+        }
+
+        function recordFlight() {
+            const currentSeconds = (elapsedTime / 1000).toFixed(2);
+            if (parseFloat(currentSeconds) <= 0) {
+                showToast('กรุณาเริ่มจับเวลาก่อนทำการบันทึก', 'bg-amber-500');
+                return;
+            }
+
+            const inputField = document.getElementById('rocketNameInput');
+            let name = inputField.value.trim();
+            if (!name) {
+                name = `บั้งไฟลำที่ ${flightLogs.length + 1}`;
+            }
+
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+            const newLog = {
+                id: Date.now(),
+                flightNo: flightLogs.length + 1,
+                name: name,
+                seconds: parseFloat(currentSeconds),
+                secondsText: `${currentSeconds} วินาที`,
+                timestamp: timeString
+            };
+
+            flightLogs.unshift(newLog); // Put newest at top
+            saveToLocalStorage();
+            renderLogsTable();
+
+            playBeep(1200, 'sine', 0.15);
+            vibrate([40, 80]);
+            showToast(`บันทึกเวลาค่าย "${name}": ${currentSeconds} วินาที`);
+
+            // Clear input for next flight
+            inputField.value = '';
+        }
+
+        function setPreset(presetText) {
+            const inputField = document.getElementById('rocketNameInput');
+            if (inputField.value.trim()) {
+                inputField.value += ' ' + presetText;
+            } else {
+                inputField.value = presetText + ' ';
+            }
+            inputField.focus();
+        }
+
+        function deleteLog(id) {
+            flightLogs = flightLogs.filter(log => log.id !== id);
+            saveToLocalStorage();
+            renderLogsTable();
+            showToast('ลบรายการบันทึกเรียบร้อย', 'bg-slate-700 text-slate-100');
+        }
+
+        function clearAllLogs() {
+            if (flightLogs.length === 0) return;
+            if (window.confirm('คุณต้องการลบสถิติบันทึกการบินทั้งหมดหรือไม่?')) {
+                flightLogs = [];
+                saveToLocalStorage();
+                renderLogsTable();
+                showToast('ลบข้อมูลทั้งหมดเรียบร้อยแล้ว', 'bg-red-500 text-white');
+            }
+        }
+
+        function renderLogsTable() {
+            const tbody = document.getElementById('logsTableBody');
+            document.getElementById('recordCount').innerText = flightLogs.length;
+
+            if (flightLogs.length === 0) {
+                tbody.innerHTML = `
+                    <tr id="emptyRow">
+                        <td colspan="5" class="px-4 py-8 text-center text-slate-500 font-medium">
+                            <i data-lucide="clock" class="w-8 h-8 mx-auto mb-2 opacity-40"></i>
+                            ยังไม่มีการบันทึกเวลา กด "บันทึกเวลา" เพื่อเก็บสถิติ
+                        </td>
+                    </tr>
+                `;
+                document.getElementById('topRecordCard').classList.add('hidden');
+                lucide.createIcons();
+                return;
+            }
+
+            // Find top flight record
+            const topRecord = [...flightLogs].sort((a, b) => b.seconds - a.seconds)[0];
+            if (topRecord) {
+                document.getElementById('topRecordCard').classList.remove('hidden');
+                document.getElementById('topTeamName').innerText = `${topRecord.name} (ลำที่ ${topRecord.flightNo})`;
+                document.getElementById('topTime').innerText = topRecord.seconds.toFixed(2);
+            }
+
+            // Build Table Rows
+            tbody.innerHTML = flightLogs.map((log, index) => {
+                const isTop = topRecord && log.id === topRecord.id;
+                return `
+                    <tr class="hover:bg-slate-800/40 transition ${isTop ? 'bg-amber-500/10' : ''}">
+                        <td class="px-4 py-3 text-center font-bold text-slate-400">
+                            ${isTop ? '<span class="text-amber-400 font-bold">🏆</span>' : `#${log.flightNo}`}
+                        </td>
+                        <td class="px-4 py-3 font-semibold ${isTop ? 'text-amber-300' : 'text-slate-100'}">
+                            ${escapeHtml(log.name)}
+                        </td>
+                        <td class="px-4 py-3 text-right font-mono-num font-black text-base sm:text-lg text-amber-300">
+                            ${log.seconds.toFixed(2)} <span class="text-xs text-amber-500 font-normal">วินาที</span>
+                        </td>
+                        <td class="px-4 py-3 text-center text-xs text-slate-400">
+                            ${log.timestamp}
+                        </td>
+                        <td class="px-4 py-3 text-center">
+                            <button onclick="deleteLog(${log.id})" class="p-1.5 hover:bg-red-500/20 text-slate-500 hover:text-red-400 rounded-lg transition" title="ลบ">
+                                <i data-lucide="trash" class="w-4 h-4"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+
+            lucide.createIcons();
+        }
+
+        function copySummaryText() {
+            if (flightLogs.length === 0) {
+                showToast('ไม่มีข้อมูลบันทึกเวลาสำหรับการคัดลอก', 'bg-amber-500');
+                return;
+            }
+
+            let summary = `🚀 สรุปผลการแข่งขันจับเวลาบั้งไฟ (หน่วยวินาทีล้วน)\n`;
+            summary += `----------------------------------------\n`;
+            flightLogs.forEach((log) => {
+                summary += `ลำที่ ${log.flightNo} | ${log.name} : ${log.seconds.toFixed(2)} วินาที (${log.timestamp})\n`;
+            });
+            summary += `----------------------------------------\n`;
+            
+            const topRecord = [...flightLogs].sort((a, b) => b.seconds - a.seconds)[0];
+            if (topRecord) {
+                summary += `🏆 สถิติต่างสูงสุด: ${topRecord.name} (${topRecord.seconds.toFixed(2)} วินาที)\n`;
+            }
+
+            copyToClipboard(summary);
+            showToast('คัดลอกสรุปผลเวลาเข้า Clipboard เรียบร้อยแล้ว!');
+        }
+
+        function exportCSV() {
+            if (flightLogs.length === 0) {
+                showToast('ไม่มีข้อมูลสำหรับดาวน์โหลด', 'bg-amber-500');
+                return;
+            }
+
+            let csvContent = "\uFEFFลำดับ,ชื่อบั้งไฟ/ค่าย,เวลาบิน (วินาที),เวลาบันทึก\n";
+            flightLogs.forEach(log => {
+                csvContent += `"${log.flightNo}","${log.name.replace(/"/g, '""')}","${log.seconds.toFixed(2)}","${log.timestamp}"\n`;
+            });
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.setAttribute("href", url);
+            link.setAttribute("download", `BangFai_Timing_Seconds_${new Date().toISOString().slice(0,10)}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            showToast('ดาวน์โหลดไฟล์ CSV เรียบร้อย');
+        }
+
+        function copyToClipboard(text) {
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+            textarea.style.position = 'fixed';
+            textarea.style.opacity = '0';
+            document.body.appendChild(textarea);
+            textarea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textarea);
+        }
+
+        function showToast(msg, bgClass = 'bg-emerald-500 text-slate-950') {
+            const toast = document.getElementById('toast');
+            document.getElementById('toastMessage').innerText = msg;
+            toast.className = `fixed bottom-6 right-6 transform translate-y-0 opacity-100 transition-all duration-300 px-5 py-3 rounded-xl font-bold shadow-2xl flex items-center space-x-2 z-50 ${bgClass}`;
+
+            setTimeout(() => {
+                toast.className = `fixed bottom-6 right-6 transform translate-y-20 opacity-0 transition-all duration-300 px-5 py-3 rounded-xl font-bold shadow-2xl flex items-center space-x-2 z-50 ${bgClass}`;
+            }, 3000);
+        }
+
+        function toggleSound() {
+            soundEnabled = !soundEnabled;
+            const icon = document.getElementById('soundIcon');
+            const label = document.getElementById('soundLabel');
+            if (soundEnabled) {
+                icon.setAttribute('data-lucide', 'volume-2');
+                icon.className = 'w-4 h-4 text-emerald-400';
+                label.innerText = 'เสียงเปิด';
+            } else {
+                icon.setAttribute('data-lucide', 'volume-x');
+                icon.className = 'w-4 h-4 text-slate-500';
+                label.innerText = 'เสียงปิด';
+            }
+            lucide.createIcons();
+        }
+
+        function escapeHtml(text) {
+            return text
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        function saveToLocalStorage() {
+            localStorage.setItem('bangfai_logs', JSON.stringify(flightLogs));
+        }
+
+        function loadLocalStorage() {
+            const saved = localStorage.getItem('bangfai_logs');
+            if (saved) {
+                try {
+                    flightLogs = JSON.parse(saved);
+                } catch (e) {
+                    flightLogs = [];
+                }
+            }
+        }
+
+        document.addEventListener('keydown', (e) => {
+            // Ignore keyboard shortcuts if editing in an input field
+            if (['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName)) {
+                if (e.code === 'Enter') {
+                    document.activeElement.blur();
+                }
+                return;
+            }
+
+            if (e.code === 'Space') {
+                e.preventDefault();
+                toggleTimer();
+            } else if (e.code === 'KeyR') {
+                e.preventDefault();
+                resetTimer();
+            } else if (e.code === 'Enter') {
+                e.preventDefault();
+                recordFlight();
+            }
+        });
+
+        // Initialize App on Window Load
+        window.onload = function() {
+            lucide.createIcons();
+            loadLocalStorage();
+            renderLogsTable();
+        };
+    </script>
+</body>
+</html>
+```
