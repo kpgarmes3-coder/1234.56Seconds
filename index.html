@@ -8,7 +8,7 @@
     <meta name="theme-color" content="#07090e">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>นาฬิกาจับเวลาบั้งไฟ (หน่วยวินาทีบริสุทธิ์) - ทีมงานน้องมีตังค์</title>
+    <title>𝙼𝚎𝚎𝚝𝚊𝚗𝚐.𝙱𝚢วิน จับเวลาบั้งไฟ (หน่วยวินาทีบริสุทธิ์)</title>
     
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -18,6 +18,9 @@
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@700;800&family=Kanit:wght@400;600;700;900&display=swap" rel="stylesheet">
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Stripe Buy Button Script -->
+    <script async src="https://js.stripe.com/v3/buy-button.js"></script>
+
     <style>
         body {
             font-family: 'Kanit', sans-serif;
@@ -67,7 +70,7 @@
             </div>
             <div>
                 <h1 class="text-xl sm:text-2xl font-black tracking-wide text-amber-400 flex items-center flex-wrap gap-2">
-                    จับเวลาบั้งไฟ 
+                    𝙼𝚎𝚎𝚝𝚊𝚗𝚐.𝙱𝚢วิน จับเวลาบั้งไฟ 
                     <span class="text-xs font-semibold px-2 py-0.5 bg-red-500/20 text-red-400 border border-red-500/40 rounded-full">หน่วยวินาทีบริสุทธิ์</span>
                 </h1>
                 <!-- Team Badge -->
@@ -227,6 +230,74 @@
                 </table>
             </div>
 
+        </div>
+
+        <!-- Social & Donate Section (NEW) -->
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-6 shadow-lg space-y-6">
+            <h2 class="text-lg font-bold text-amber-400 border-b border-slate-800 pb-3 flex items-center space-x-2">
+                <i data-lucide="users" class="w-6 h-6"></i>
+                <span>ช่องทางการติดต่อ และ สนับสนุน</span>
+            </h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Contact Links -->
+                <div class="space-y-4">
+                    <h3 class="text-sm font-bold text-slate-300 uppercase tracking-wider mb-2">ทีมงานน้องมีตังค์ & ช่างเจียง</h3>
+                    <div class="flex flex-col gap-2">
+                        <a href="https://www.tiktok.com/@nongmeetang90?_r=1&_t=ZS-9ACftN1qbFE" target="_blank" class="flex items-center space-x-3 p-3 rounded-xl bg-slate-800/50 hover:bg-slate-800 border border-slate-700/50 transition">
+                            <i data-lucide="video" class="w-5 h-5 text-pink-400"></i>
+                            <span class="text-sm font-medium text-slate-200">TikTok: ค่ายน้องมีตังค์</span>
+                        </a>
+                        <a href="https://www.facebook.com/share/1HPX1BzfU9/" target="_blank" class="flex items-center space-x-3 p-3 rounded-xl bg-slate-800/50 hover:bg-slate-800 border border-slate-700/50 transition">
+                            <i data-lucide="facebook" class="w-5 h-5 text-blue-400"></i>
+                            <span class="text-sm font-medium text-slate-200">Facebook: ช่างเจียง</span>
+                        </a>
+                        <a href="tel:0914732609" class="flex items-center space-x-3 p-3 rounded-xl bg-slate-800/50 hover:bg-slate-800 border border-slate-700/50 transition">
+                            <i data-lucide="phone" class="w-5 h-5 text-emerald-400"></i>
+                            <span class="text-sm font-medium text-slate-200">โทร: 0914732609 (ช่างเจียง)</span>
+                        </a>
+                    </div>
+
+                    <h3 class="text-sm font-bold text-slate-300 uppercase tracking-wider mb-2 mt-6">ผู้พัฒนา</h3>
+                    <div class="flex flex-col gap-2">
+                        <a href="https://www.facebook.com/share/1CiGuFFWnU/" target="_blank" class="flex items-center space-x-3 p-3 rounded-xl bg-slate-800/50 hover:bg-slate-800 border border-slate-700/50 transition">
+                            <i data-lucide="facebook" class="w-5 h-5 text-blue-400"></i>
+                            <span class="text-sm font-medium text-slate-200">Facebook: ผู้พัฒนา</span>
+                        </a>
+                        <a href="https://www.tiktok.com/@peerapatthongramun_56?_r=1&_t=ZS-9ACfpqZF52C" target="_blank" class="flex items-center space-x-3 p-3 rounded-xl bg-slate-800/50 hover:bg-slate-800 border border-slate-700/50 transition">
+                            <i data-lucide="video" class="w-5 h-5 text-pink-400"></i>
+                            <span class="text-sm font-medium text-slate-200">TikTok: ผู้พัฒนา</span>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Donate -->
+                <div class="space-y-4">
+                    <h3 class="text-sm font-bold text-slate-300 uppercase tracking-wider mb-2">สนับสนุนผลงาน (Donate)</h3>
+                    <div class="bg-slate-950 border border-slate-800 rounded-xl p-5 flex flex-col items-center justify-center space-y-5 text-center h-full">
+                        
+                        <!-- Stripe -->
+                        <div class="w-full">
+                            <p class="text-xs text-slate-400 mb-3">สนับสนุนผ่านบัตรเครดิต/เดบิต (Stripe)</p>
+                            <div class="flex justify-center py-2 rounded-lg relative z-10">
+                                <stripe-buy-button
+                                  buy-button-id="buy_btn_1ULtV7Dx0V34k6KYZAj8rVZx"
+                                  publishable-key="pk_live_51U7FRlDx0V34k6KY7OuIk6MaTMWmenvuYa2iOYc4aSaig5LyXC0n3NpstjRzd9YhLjDfLykG1AmM5LW0IPKE9yUt003ZdeDNPD"
+                                >
+                                </stripe-buy-button>
+                            </div>
+                            <a href="https://buy.stripe.com/14A6oH04U4YV0fZ0WBgw000" target="_blank" class="text-[11px] text-blue-400 hover:underline mt-2 inline-block">ลิงก์สำรอง (หน้าชำระเงิน Stripe)</a>
+                        </div>
+
+                        <!-- QR Code -->
+                        <div class="w-full pt-4 border-t border-slate-800">
+                            <p class="text-xs text-slate-400 mb-3">สแกน QR Code เพื่อสนับสนุนผู้พัฒนา</p>
+                            <img src="42854.png" alt="QR Code สนับสนุนผู้พัฒนา" class="mx-auto max-w-[200px] w-full rounded-xl border border-slate-700 shadow-md">
+                        </div>
+                        
+                    </div>
+                </div>
+            </div>
         </div>
 
     </main>
@@ -464,7 +535,7 @@
         }
 
         function handleDisplayClick(event) {
-            if (event.target.tagName.toLowerCase() !== 'input' && event.target.tagName.toLowerCase() !== 'button') {
+            if (event.target.tagName.toLowerCase() !== 'input' && event.target.tagName.toLowerCase() !== 'button' && event.target.tagName.toLowerCase() !== 'stripe-buy-button') {
                 toggleTimer();
             }
         }
